@@ -7,7 +7,7 @@ import json
 # NOTE: This is temporary. We will revert this after testing.
 INFOBIP_API_KEY = "7ee559bf97db52e37dea0789c647bc29-260f73b9-3e3a-4afd-ac17-c2eeb8f0a37a"
 INFOBIP_BASE_URL = "https://api.infobip.com"
-WHATSAPP_SENDER_ID = "0316B1A51F2E9C89ABFB2744DDCC3319"
+WHATSAPP_SENDER_ID = "254768846446"
 
 app = FastAPI()
 
