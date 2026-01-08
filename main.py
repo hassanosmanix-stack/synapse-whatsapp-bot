@@ -22,15 +22,11 @@ def send_whatsapp_message(to_number: str, message_text: str):
     }
     
     payload = {
-        "messages": [
-            {
-                "from": WHATSAPP_SENDER_ID,
-                "to": to_number,
-                "message": {
-                    "text": message_text
-                }
-            }
-        ]
+        "from": WHATSAPP_SENDER_ID,
+        "to": to_number,
+        "content": {
+            "text": message_text
+        }
     }
     
     try:
@@ -59,20 +55,27 @@ async def webhook(request: Request):
                 from_number = result.get("from")
                 text = result.get("message", {}).get("text")
                 
+                # Infobip webhook sends \'from\' as a full number, but \'to\' for sending needs to be just the number
+                # Extract just the number from the \'from\' field if it contains a \'tel:\' prefix or similar
+                if from_number.startswith("tel:"):
+                    from_number = from_number[4:]
+                # Ensure \'to_number\' is just the number without any prefixes
+                to_number_clean = from_number # The recipient of our reply is the sender of the incoming message
+                
                 # Simple Welcome Flow Logic (Day 1)
                 if text.lower() == "hi":
                     response_text = (
-                        "👋 Welcome to Synapse Digital's 'Ignite' Demo!\n\n"
+                        "👋 Welcome to Synapse Digital\'s \'Ignite\' Demo!\n\n"
                         "I am your fully automated ordering bot.\n\n"
                         "How can I help you today?\n"
                         "1. View Menu\n"
                         "2. Place Order\n"
                         "3. Talk to Staff"
                     )
-                    send_whatsapp_message(from_number, response_text)
+                    send_whatsapp_message(to_number_clean, response_text)
                 else:
                     # Default response for unhandled messages
-                    send_whatsapp_message(from_number, "I'm sorry, I didn't understand that. Please type 'Hi' to see the main menu.")
+                    send_whatsapp_message(to_number_clean, "I\'m sorry, I didn\'t understand that. Please type \'Hi\' to see the main menu.")
                 
                 # We only process the first message in the batch for simplicity
                 return {"status": "success", "message": "Message processed"}
@@ -85,3 +88,7 @@ async def webhook(request: Request):
         # Return 200 OK to Infobip even on internal error to prevent retries, 
         # but log the error for debugging.
         return {"status": "error", "message": str(e)}
+
+# Infobip requires a GET endpoint for verification, but usually this is done 
+# during the initial setup and not needed for the runtime webhook. 
+# The POST endpoint is what matters.
